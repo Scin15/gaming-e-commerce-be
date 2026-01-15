@@ -1,0 +1,11 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/generated/prisma
+app_test.js
+express_test.controller.js
+express_test.js
+express_test.router.js
+/prisma/.DS_Store
+.DS_Store

@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model app_users {
+  id             Int             @id @default(autoincrement())
+  name           String?         @db.VarChar(255)
+  surname        String?         @db.VarChar(255)
+  mail           String          @unique(map: "mail_unica") @db.VarChar(255)
+  password       String          @db.VarChar(255)
+  role           String?         @db.VarChar(1)
+  date_create    DateTime?       @db.Date
+  date_eliminate DateTime?       @db.Date
+  refresh_token  String?         @db.VarChar(255)
+  expense        expense[]
+  user_settings  user_settings[]
+}
+
+model category {
+  id       Int       @id @default(autoincrement())
+  category String?   @db.VarChar(255)
+  icon     String?   @db.VarChar(255)
+  expense  expense[]
+}
+
+model expense {
+  id          Int       @id @default(autoincrement())
+  userid      Int
+  date_create DateTime? @db.Date
+  date_update DateTime? @db.Date
+  category_id Int?
+  amount      Decimal?  @db.Decimal
+  note        String?   @db.VarChar(1000)
+  date        DateTime? @db.Date
+  category    category? @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  app_users   app_users @relation(fields: [userid], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user_settings {
+  id          Int       @id @default(autoincrement())
+  userid      Int
+  date_update DateTime? @db.Date
+  budget      Decimal?  @db.Decimal
+  app_users   app_users @relation(fields: [userid], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
