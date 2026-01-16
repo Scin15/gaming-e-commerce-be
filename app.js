@@ -10,18 +10,19 @@ import express from 'express'
 //   deleteExpenseAll,
 //   readUserKpi,
 //   readUserStats } from './controllers/app.controller.js'
-// import { 
-//   registerUser, 
-//   loginUser, 
-//   logoutUser, 
-//   protectedRoute, 
-//   refreshToken } from './controllers/app.autentication.js'
+import { 
+  registerUser, 
+  loginUser, 
+  logoutUser, 
+  protectedRoute, 
+  refreshToken } from './controllers/app.autentication.js'
 import 'dotenv/config' // libreria dotenv per usare le variabili di ambiente con process.env.<variabile>
 import cookieParser from 'cookie-parser' // libreria per la gestione di cookie
 import cors from 'cors' // libreria per la gestione del Cross-origin resource sharing: https://en.wikipedia.org/wiki/Cross-origin_resource_sharing
 // import { isAuth } from './controllers/isAuth.js'
 import mongoose from 'mongoose';
 import { Product } from './schema/product.schema.js';
+import { User } from './schema/user.schema.js'; 
 
 mongoose.connect(`mongodb+srv://${process.env.DB_ADMIN}:${process.env.DB_ADMIN_PASSWORD}@gaming-e-commerce-db.p4wd4wx.mongodb.net/?appName=gaming-e-commerce-db`)
   .then(() => {
@@ -51,10 +52,35 @@ app.get('/test', async (req, res) => {
   }
 })
 
+app.get('/user/all', async (req, res) => {
+  // query al db
+  try {
+    const result = await User.find();
+    console.log("Utenti trovati: ", result);
+    res.status(200).send(result);
+  } catch(err) {
+    res.status(500).send(err);
+  }
+})
+
 app.post("/product", async (req, res) => {
   try {
-    const result = await Product.create(req.body);
+    let payload = req.body;
+    payload.created_at = Date.now();
+    console.log("Payload:", payload);
+    const result = await Product.create(payload);
     console.log("Prodotto inserito: ", result);
+    res.status(200).send(result);
+  } catch(err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+})
+
+app.post("/user", async (req, res) => {
+  try {
+    const result = await User.create(req.body);
+    console.log("Utente inserito: ", result);
     res.status(200).send(result);
   } catch(err) {
     console.log(err);
@@ -72,11 +98,11 @@ app.delete("/product/all", async(req, res) => {
 })
 
 // // registrazione utente
-// app.post('/register', registerUser)
+app.post('/register', registerUser);
 // // login utente
-// app.post('/login', loginUser)
+app.post('/login', loginUser);
 // // logour utente
-// app.post('/logout', logoutUser)
+app.post('/logout', logoutUser);
 // // percorso protetto da accesso
 // app.get('/protected', protectedRoute)
 // // refresh del token di accesso

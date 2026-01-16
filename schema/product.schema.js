@@ -4,12 +4,12 @@ const Schema = mongoose.Schema;
 
 // definisco lo schema categorie che uso per l'array category nello schema per i prodotti
 const CategorySchema = new Schema({
-  tag: {type: String, required: true},
+  tag: {type: String, required: [true, "Tag obbligatorio"]},
   name: {type: String}
 })
 
 const PlatformSchema = new Schema({
-  tag: {type: String, required: true},
+  tag: {type: String, required: [true, "Tag obbligatorio"]},
   name: {type: String}
 })
 
@@ -20,10 +20,12 @@ const ProductSchema = new Schema({
   price: {type: Number, required: true},
   desc: {type: String},
   img_cover: {type: String},
-  img_misc: [{type: String}],
-  category: {type: [CategorySchema], required: true, default: undefined},
-  insert_at: {type: Date},
-  update_at: {type: Date},
+  img_misc: {type: [String]},
+  category: {type: [CategorySchema], required: true, validate: {
+    validator: v => Array.isArray(v) && v.length > 0, 
+    message: "Array non valido (non array o array vuoto)"}},
+  created_at: {type: Date},
+  updated_at: {type: Date},
 });
 
 const Product = mongoose.model("Product", ProductSchema);
