@@ -40,9 +40,15 @@ app.use(cors({
   credentials : true
 }))
 
-app.get('/test', (req, res) => {
+app.get('/test', async (req, res) => {
   // query al db
-  res.status(200).send("Dati trovati...");
+  try {
+    const result = await Product.find();
+    console.log("Dati trovati: ", result);
+    res.status(200).send(result);
+  } catch(err) {
+    res.status(500).send(err);
+  }
 })
 
 app.post("/product", async (req, res) => {
@@ -52,6 +58,15 @@ app.post("/product", async (req, res) => {
     res.status(200).send(result);
   } catch(err) {
     console.log(err);
+    res.status(500).send(err);
+  }
+})
+
+app.delete("/product/all", async(req, res) => {
+  try{
+    const result = await Product.deleteMany();
+    res.status(200).send(result);
+  } catch(err) {
     res.status(500).send(err);
   }
 })
