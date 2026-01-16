@@ -13,10 +13,10 @@ const generateRefreshToken = ( userId ) => {
 }
 
 const sendAccessToken = (req, res, accessToken, user) => {
-    const { id, name, surname } = user
+    const { id, name, surname, mail } = user;
     res.send({ 
         accessToken,
-        mail : user.mail,
+        mail,
         id,
         name,
         surname

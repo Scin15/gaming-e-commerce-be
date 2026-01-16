@@ -1,2 +1,3 @@
-# App_spese
-Web app to track personal expenses
+# e-commerce-gaming
+
+Server express js per la gestione autenticazioni, autorizzazioni, catalogo e ordini.

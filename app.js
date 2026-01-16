@@ -1,27 +1,35 @@
-import { PrismaClient } from './generated/prisma/index.js'
-import { withAccelerate } from '@prisma/extension-accelerate'
 import express from 'express'
-import { 
-  insertExpense, 
-  readExpense, 
-  readUserExpense, 
-  readCategory, 
-  updateExpense,
-  updateBudget, 
-  deleteExpense, 
-  deleteExpenseAll,
-  readUserKpi,
-  readUserStats } from './controllers/app.controller.js'
-import { 
-  registerUser, 
-  loginUser, 
-  logoutUser, 
-  protectedRoute, 
-  refreshToken } from './controllers/app.autentication.js'
+// import { 
+//   insertExpense, 
+//   readExpense, 
+//   readUserExpense, 
+//   readCategory, 
+//   updateExpense,
+//   updateBudget, 
+//   deleteExpense, 
+//   deleteExpenseAll,
+//   readUserKpi,
+//   readUserStats } from './controllers/app.controller.js'
+// import { 
+//   registerUser, 
+//   loginUser, 
+//   logoutUser, 
+//   protectedRoute, 
+//   refreshToken } from './controllers/app.autentication.js'
 import 'dotenv/config' // libreria dotenv per usare le variabili di ambiente con process.env.<variabile>
 import cookieParser from 'cookie-parser' // libreria per la gestione di cookie
 import cors from 'cors' // libreria per la gestione del Cross-origin resource sharing: https://en.wikipedia.org/wiki/Cross-origin_resource_sharing
-import { isAuth } from './controllers/isAuth.js'
+// import { isAuth } from './controllers/isAuth.js'
+import mongoose from 'mongoose';
+import { Product } from './schema/product.schema.js';
+
+mongoose.connect(`mongodb+srv://${process.env.DB_ADMIN}:${process.env.DB_ADMIN_PASSWORD}@gaming-e-commerce-db.p4wd4wx.mongodb.net/?appName=gaming-e-commerce-db`)
+  .then(() => {
+    console.log("Connesso al DB");
+  })
+  .catch(() => {
+    console.log("Errore nella connessione al DB");
+  })
 
 const app = express()
 
@@ -32,33 +40,47 @@ app.use(cors({
   credentials : true
 }))
 
-const prisma = new PrismaClient().$extends(withAccelerate())
+app.get('/test', (req, res) => {
+  // query al db
+  res.status(200).send("Dati trovati...");
+})
 
-// registrazione utente
-app.post('/register', registerUser)
-// login utente
-app.post('/login', loginUser)
-// logour utente
-app.post('/logout', logoutUser)
-// percorso protetto da accesso
-app.get('/protected', protectedRoute)
-// refresh del token di accesso
-app.post('/refresh_token', refreshToken)
+app.post("/product", async (req, res) => {
+  try {
+    const result = await Product.create(req.body);
+    console.log("Prodotto inserito: ", result);
+    res.status(200).send(result);
+  } catch(err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+})
+
+// // registrazione utente
+// app.post('/register', registerUser)
+// // login utente
+// app.post('/login', loginUser)
+// // logour utente
+// app.post('/logout', logoutUser)
+// // percorso protetto da accesso
+// app.get('/protected', protectedRoute)
+// // refresh del token di accesso
+// app.post('/refresh_token', refreshToken)
 
 // middleware per la verifica del JWT accessToken. Se è verificato aggiunge alla richiesta una proprietà userAuth valorizzato con user id
-app.use(protectedRoute)
+// app.use(protectedRoute)
 
 // CRUD
-app.get('/allExpenses', readExpense)
-app.get('/expenses', readUserExpense)
-app.get('/expenses/kpi/', readUserKpi)
-app.get('/expenses/stats/', readUserStats)
-app.get('/category', readCategory)
-app.post('/expenses', insertExpense)
-app.put('/expenses', updateExpense)
-app.delete('/expenses', deleteExpense)
-app.delete('/expenses/all', deleteExpenseAll)
-app.put('/budget', updateBudget)
+// app.get('/allExpenses', readExpense)
+// app.get('/expenses', readUserExpense)
+// app.get('/expenses/kpi/', readUserKpi)
+// app.get('/expenses/stats/', readUserStats)
+// app.get('/category', readCategory)
+// app.post('/expenses', insertExpense)
+// app.put('/expenses', updateExpense)
+// app.delete('/expenses', deleteExpense)
+// app.delete('/expenses/all', deleteExpenseAll)
+// app.put('/budget', updateBudget)
 
 // avvio server
 app.listen(process.env.PORT, () => {
