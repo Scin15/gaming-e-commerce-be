@@ -11,6 +11,9 @@ import express from 'express'
 //   readUserKpi,
 //   readUserStats } from './controllers/app.controller.js'
 import { 
+  insertProduct,
+  readAllProducts} from './controllers/app.controller.js';
+import { 
   registerUser, 
   loginUser, 
   logoutUser, 
@@ -63,20 +66,6 @@ app.get('/user/all', async (req, res) => {
   }
 })
 
-app.post("/product", async (req, res) => {
-  try {
-    let payload = req.body;
-    payload.created_at = Date.now();
-    console.log("Payload:", payload);
-    const result = await Product.create(payload);
-    console.log("Prodotto inserito: ", result);
-    res.status(200).send(result);
-  } catch(err) {
-    console.log(err);
-    res.status(500).send(err);
-  }
-})
-
 app.post("/user", async (req, res) => {
   try {
     const result = await User.create(req.body);
@@ -97,11 +86,11 @@ app.delete("/product/all", async(req, res) => {
   }
 })
 
-// // registrazione utente
+// registrazione utente
 app.post('/register', registerUser);
-// // login utente
+// login utente
 app.post('/login', loginUser);
-// // logour utente
+// logour utente
 app.post('/logout', logoutUser);
 // // percorso protetto da accesso
 // app.get('/protected', protectedRoute)
@@ -112,16 +101,8 @@ app.post('/logout', logoutUser);
 // app.use(protectedRoute)
 
 // CRUD
-// app.get('/allExpenses', readExpense)
-// app.get('/expenses', readUserExpense)
-// app.get('/expenses/kpi/', readUserKpi)
-// app.get('/expenses/stats/', readUserStats)
-// app.get('/category', readCategory)
-// app.post('/expenses', insertExpense)
-// app.put('/expenses', updateExpense)
-// app.delete('/expenses', deleteExpense)
-// app.delete('/expenses/all', deleteExpenseAll)
-// app.put('/budget', updateBudget)
+app.post('/product', insertProduct);
+app.get("/product", readAllProducts);
 
 // avvio server
 app.listen(process.env.PORT, () => {

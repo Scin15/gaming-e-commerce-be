@@ -1,44 +1,33 @@
 import bcrypt from 'bcryptjs' // libreria per hash della password
 import cookieParser from 'cookie-parser' // libreria per la getione dei cookie
+import { Product } from '../schema/product.schema.js';
 const saltRounds = 10
 
 // funzione per la creazione nuovo record
-const insertExpense = async (req, res) => {
-  const newExpense = req.body
-  const currentDate = new Date().toJSON()
-  console.log(`Inserimento nuova spesa: ${newExpense}`)
+const insertProduct = async (req, res) => {
+  try {
+    let payload = req.body;
+    payload.created_at = Date.now();
+    console.log("Payload:", payload);
+    const result = await Product.create(payload);
+    console.log("Prodotto inserito: ", result);
+    res.status(200).send(result);
+  } catch(err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+}
 
-  console.log(
-   {
-      data: {
-        userid : req.userAuth,
-        category_id : newExpense.category_id,
-        date_create : currentDate,
-        date_update : currentDate,
-        amount: newExpense.amount,
-        note : newExpense.note,
-        date: new Date(newExpense.date).toJSON(),
-        }
-    } 
-  )
-
-  try{
-
-    const expense = await prisma.expense.create({
-      data: {
-        userid : newExpense.userid,
-        category_id : newExpense.category_id,
-        date_create : currentDate,
-        date_update : currentDate,
-        amount: newExpense.amount,
-        note : newExpense.note,
-        date: new Date(newExpense.date).toJSON(),
-        }
-    })
-
-    res.status(200).send(expense)
-  } catch(error) {
-    res.status(500).send(`Errore nell'insermnento nuova spesa: ${error}`)
+// se non mando una query string con il titolo, ritorna tutto il catalogo prodotti
+const readAllProducts = async (req, res) => {
+  try {
+    const title = req.query.title;
+    console.log("Richiesta: ", title);
+    const result = await Product.find(
+      title ? { title: title } : {});
+    res.status(200).send(result);
+  } catch(err) {
+    res.status(500).send(err);
   }
 }
 
@@ -272,14 +261,6 @@ const readUserStats = async (req, res) => {
 
 // export delle funzioni per CRUD API
 export { 
-  insertExpense, 
-  readExpense, 
-  readUserExpense,
-  readCategory, 
-  updateExpense,
-  updateBudget, 
-  deleteExpense, 
-  deleteExpenseAll,
-  readUserKpi,
-  readUserStats
+  insertProduct,
+  readAllProducts,
 }
