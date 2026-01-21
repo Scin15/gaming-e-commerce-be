@@ -6,10 +6,37 @@ const saltRounds = 10
 // funzione per la creazione nuovo record
 const insertProduct = async (req, res) => {
   try {
+    // validazione prodotto
+    // validazione tag che sia di 3 caratteri e non di più
+    // validazione che url sia valido?
+
+    // costruzione del payload da inserire nel db
     let payload = req.body;
-    payload.created_at = Date.now();
-    console.log("Payload:", payload);
-    const result = await Product.create(payload);
+
+    if (payload.platform_tag.length != 3) {
+      res.status(400).send("Platform Tag length < 3");
+      return;
+    }
+    if (payload.category_tag.length != 3) {
+      res.status(400).send("Category Tag length < 3");
+      return;
+    }
+
+    const payloadElaborated = {
+      title: payload.title,
+      platform: {tag: payload.platform_tag, name: payload.platform},
+      price: Number(payload.price),
+      desc: payload.desc,
+      img_cover: payload.img_cover,
+      img_misc: payload.img_misc,
+      category: {tag: payload.category_tag, name: payload.category}
+    };
+
+    console.log("Payload rielaborato:", payloadElaborated);
+
+    payloadElaborated.created_at = Date.now();
+    console.log("Payload:", payloadElaborated);
+    const result = await Product.create(payloadElaborated);
     console.log("Prodotto inserito: ", result);
     res.status(200).send(result);
   } catch(err) {

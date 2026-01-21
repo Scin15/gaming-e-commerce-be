@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { urlencoded } from 'express'
 // import { 
 //   insertExpense, 
 //   readExpense, 
@@ -37,12 +37,14 @@ mongoose.connect(`mongodb+srv://${process.env.DB_ADMIN}:${process.env.DB_ADMIN_P
 
 const app = express()
 
-app.use(express.json())
-app.use(cookieParser())
+app.use(express.json());
+app.use(cookieParser());
+app.use(express.urlencoded());
 app.use(cors({
   origin : ["http://localhost:5173", "https://app-spese-fe.onrender.com"],
   credentials : true
-}))
+}));
+
 
 app.get('/test', async (req, res) => {
   // query al db
