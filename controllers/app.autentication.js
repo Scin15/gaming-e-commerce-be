@@ -1,66 +1,137 @@
-import 'dotenv/config' 
-import { hash, compare } from 'bcryptjs' // libreria per la codifica hash delle password
+import 'dotenv/config'; 
+import { hash, compare } from 'bcryptjs'; // libreria per la codifica hash delle password
 import {
     generateAccessToken,
     generateRefreshToken,
     sendAccessToken,
     sendRefreshToken
-} from './token.js'
-import { isAuth } from './isAuth.js'
+} from './token.js';
+import { isAuth } from './isAuth.js';
 import * as jwt from 'jsonwebtoken';
 import { User } from '../schema/user.schema.js';
-const {verify} = jwt.default
-// const prisma = new PrismaClient().$extends(withAccelerate())
+import nodemailer from "nodemailer";
+const {verify} = jwt.default;
+
+const trasporter = nodemailer.createTransport({
+    host: "smtp.ethereal.email",
+    port: 587,
+    secure: false,
+    auth: {
+        user: process.env.EMAIL_TEST,
+        pass: process.env.EMAIL_TEST_SECRET
+    }
+});
+
+const sendActivationMail = async(email, token) => {
+    
+    try {
+        const info = await trasporter.sendMail({
+            from: "Marco",
+            to: email,
+            subject: "Hello",
+            text: "Usa il link sottostante per attivare il tuo account.",
+            html: "<a href='http://localhost:3000/activate/?email="+ email + "&token=" + token + "'>Link di attivazione</a>"
+        });
+        
+        console.log("Messaggio mandato:", info);
+        // res.status(200).send(info);
+        
+    } catch (err) {
+        console.log(err);
+        res.status(500).send({error: err.message});
+    }
+}
+
+export {sendActivationMail};
+
+const activateAccount = async (req, res) => {
+
+    const activationToken = req.query.token;
+    const email = req.query.email;
+
+    console.log("Email e token trovati: %s %s", email, activationToken);
+
+    try {
+        const user = await User.findOne({email: email});
+        if (!user || user instanceof Array && user.length === 0) {
+            res.status(404).send({error: "Utente non registrato"});
+            return;
+        }
+        if (user.active) {
+            res.status(400).send({error: "Utente già attivato"});
+            return;
+        }
+        if (user.activation_token != activationToken) {
+            res.status(400).send("Attivazione non riuscita");
+            return;
+        }
+
+        user.activation_token = "";
+        user.active = true;
+
+        await user.save();
+
+        res.status(200).send({message: "Account attivato con successo"});
+
+    } catch (err) {
+        res.status(400).send({error: "Attivazione non riuscita"});
+    }
+}
 
 const registerUser = async (req, res) => {
-
+    
     try {
         const email = req.body.email;
         const name = req.body.name;
         const surname = req.body.surname;
         const password = req.body.password;
         const role = req.body.role;
-    
+        
         if ( !email || !password || !role ) { 
-            throw new Error("Mancano dati")
+            res.status(400).send({error: "Mancano dati"});
+            return;
         }
         
         if ( !email.match(/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/) ) { 
-            throw new Error("Email non valida")
+            res.status(400).send({error: "Email non valida"});
+            return;
         }
-
+        
         // constrollo se l'utente è già presente nel DB
         const alreadyRegistered = await User.find({ email: email});
-        console.log("Check se utente gia registrato:", alreadyRegistered);
-        // se già presenete nel DB lancio un errore
+        // se già presenete nel DB mando una risposta di errore;
         if ( alreadyRegistered.length > 0 ) {
-
-            throw new Error("Utente già registrato")
+            res.status(400).send({error: "Utente già registrato"});
+            return;
         }
         
         // se non presente nel DB codifico la password e aggiungo l'utente
         const hashedPassword = await hash( password, 10);
         const currentDate = Date.now();
-        try{
-            var insertUser = await User.create({
-                    email: email,
-                    name : name,
-                    surname : surname,
-                    password : hashedPassword,
-                    role : role,
-                    created_at : currentDate
-            })
-        } catch(err) {
-            throw new Error("Errore nell'inserimento nuova utenza");
+        // genero token per attivazione account tramite mail
+        const activationToken = generateAccessToken( email );
+        
+        var insertUser = await User.create({
+            email: email,
+            name : name,
+            surname : surname,
+            password : hashedPassword,
+            role : role,
+            active: false,
+            activation_token: activationToken,
+            created_at : currentDate
+        })
+        
+        if (!insertUser) {
+            res.status(500).send({error: "Errore nell'inserimento nuova utenza"});
+            return;
         }
-    
-
-        res.status(200).send(insertUser)
+        
+        await sendActivationMail(email, activationToken);
+        res.status(200).send(insertUser);
+        
     } catch(error) {
-        res.status(500).send({
-            error : `${error.message}`
-        }
-        )
+        res.status(500).send({error : `${error.message}`});
     }
 }
 
@@ -73,43 +144,40 @@ const loginUser = async (req, res) => {
     const password = req.body.password;
 
     if ( !email || !password ) {
-        throw new Error("Mail o password mancanti")
+        res.status(400).send({error: "Email o password mancanti"});
+        return;
     }
 
-    const result = await User.find({
-            email : email
-    });
+    const user = await User.findOne({ email : email });
 
-    const user = result[0];
+    console.log("Utente trovato per il login", user);
 
-    if ( !user || user.length == 0 ) {
-        throw new Error("Utente non registrato");
+    
+    if (!user || user instanceof Array && user.length == 0) {
+        res.status(400).send({error: "Utente non registrato"});
+        return;
     }
-
-    console.log("Utente trovato:", user);
+    
+    if (!user.active) {
+        res.status(400).send({error: "Utenza non attivata, controlla la mail"});
+        return;
+    }
 
     try{
         var userVerificated = await compare( password, user.password )
-    }catch(err) {
-        console.log("Errore nel confronto password")
+    } catch(err) {
         throw new Error(err);
     }
+
     if ( !userVerificated ) {
-        throw new Error("Password errata");
+        res.status(401).send({error: "Password errata"});
+        return;
     }
     // creazione ed invio jwtoken (JSON Web token)
-    const accessToken = generateAccessToken( user._id );
-    const refreshToken = generateRefreshToken( user._id );
+    const accessToken = generateAccessToken( email );
     // inserimento refresh_token nel DB
-    await User.updateOne( {
-                _id : user._id
-            },
-            {
-                refresh_token: refreshToken
-    } )
 
     // invio del token di autenticazione e di refresh
-    sendRefreshToken( req, res, refreshToken )
     sendAccessToken( req, res, accessToken, user )
 
     } catch(error) {
@@ -120,26 +188,25 @@ const loginUser = async (req, res) => {
 }
 
 const logoutUser = async ( req, res ) => {
-    console.log("arrivato al logout")
-    res.clearCookie('refreshToken', { path : '/refresh_token' })
-    res.status(200).send("Logged out")
+    console.log("arrivato al logout");
+    res.clearCookie('refreshToken', { path : '/refresh_token' });
+    res.status(200).send("Logged out");
 }
 
 // diventa il middleware per ogni richiesta protetta (ogni richiesa di CRUD relativa all'utente)
 const protectedRoute = async ( req, res, next ) => {
     try {
-        //console.log(req.headers)
-        const userId = isAuth(req) // ritorna l'userId
+        const userId = isAuth(req, res) // ritorna l'userId
     if ( !userId ) {
-      throw new Error("You need to login")
+        res.status(403).send({error: "Non autorizzato"});
+        return;
     }
     
-    console.log("Utente auth:", userId)
-    req.userAuth = userId
-    next()
+    req.userAuth = userId;
+    next();
 
     } catch(error) {
-        res.status(500).send(`Errore nell'accesso alla risorsa: ${error}`)
+        res.status(404).send({error:`Errore nell'accesso alla risorsa: ${error}`});
     }
 }
 
@@ -199,5 +266,6 @@ export {
     logoutUser,
     protectedRoute,
     refreshToken,
+    activateAccount,
 }
 

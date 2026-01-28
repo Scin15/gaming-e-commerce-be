@@ -6,19 +6,20 @@ const Schema = mongoose.Schema;
 const OrderSchema = new Schema({
   title: {type: String, required: true},
   price: {type: Number, required: true},
+  quantity: {type: Number, required: true},
   state: {
-    tag: {type: String, required: true},
+    tag: {type: String, required: true, enum: ["acc", "shp", "del", "cnl"]},
     desc: {type: String}
   },
   address: {type: String, required: true},
   payment: {
-    tag: {type: String, required: true},
+    tag: {type: String, required: true, enum: ["msc", "vis", "pay", "app"]},
     desc: {type: String}
   },
   placed_at: {type: Date, required: true},
   shipped_at: {type: Date},
   canceled_at: {type: Date},
-})
+});
 
 const UserSchema = new Schema({
   name: {type: String},
@@ -29,6 +30,8 @@ const UserSchema = new Schema({
   order: {type: [OrderSchema]},
   role: {type: String, required: true, enum: ["admin","user"]},
   refresh_token: {type: String},
+  activation_token: {type: String},
+  active: {type: Boolean, required: true},
   created_at: {type: Date, required: true},
   updated_at: {type: Date},
   expired_at: {type: Date},

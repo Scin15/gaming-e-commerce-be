@@ -1,24 +1,17 @@
 import express, { urlencoded } from 'express'
-// import { 
-//   insertExpense, 
-//   readExpense, 
-//   readUserExpense, 
-//   readCategory, 
-//   updateExpense,
-//   updateBudget, 
-//   deleteExpense, 
-//   deleteExpenseAll,
-//   readUserKpi,
-//   readUserStats } from './controllers/app.controller.js'
 import { 
   insertProduct,
-  readAllProducts} from './controllers/app.controller.js';
+  readProducts,
+  insertOrder,
+  updateUser,
+  readOrder} from './controllers/app.controller.js';
 import { 
   registerUser, 
   loginUser, 
   logoutUser, 
   protectedRoute, 
-  refreshToken } from './controllers/app.autentication.js'
+  refreshToken,
+  activateAccount } from './controllers/app.autentication.js'
 import 'dotenv/config' // libreria dotenv per usare le variabili di ambiente con process.env.<variabile>
 import cookieParser from 'cookie-parser' // libreria per la gestione di cookie
 import cors from 'cors' // libreria per la gestione del Cross-origin resource sharing: https://en.wikipedia.org/wiki/Cross-origin_resource_sharing
@@ -46,17 +39,6 @@ app.use(cors({
 }));
 
 
-app.get('/test', async (req, res) => {
-  // query al db
-  try {
-    const result = await Product.find();
-    console.log("Dati trovati: ", result);
-    res.status(200).send(result);
-  } catch(err) {
-    res.status(500).send(err);
-  }
-})
-
 app.get('/user/all', async (req, res) => {
   // query al db
   try {
@@ -64,17 +46,6 @@ app.get('/user/all', async (req, res) => {
     console.log("Utenti trovati: ", result);
     res.status(200).send(result);
   } catch(err) {
-    res.status(500).send(err);
-  }
-})
-
-app.post("/user", async (req, res) => {
-  try {
-    const result = await User.create(req.body);
-    console.log("Utente inserito: ", result);
-    res.status(200).send(result);
-  } catch(err) {
-    console.log(err);
     res.status(500).send(err);
   }
 })
@@ -88,23 +59,39 @@ app.delete("/product/all", async(req, res) => {
   }
 })
 
+app.delete("/user/all", async(req, res) => {
+  try {
+    const result = await User.deleteMany();
+    res.status(200).send({message: "Tutti gli utenti eliminati con successo"});
+  } catch (err) {
+    res.status(500).send({error: err.message});
+  }
+})
+
 // registrazione utente
 app.post('/register', registerUser);
 // login utente
 app.post('/login', loginUser);
 // logour utente
 app.post('/logout', logoutUser);
+// attivazione account con url inviato per email dopo la registrazione
+app.get("/activate", activateAccount);
 // // percorso protetto da accesso
 // app.get('/protected', protectedRoute)
 // // refresh del token di accesso
 // app.post('/refresh_token', refreshToken)
 
-// middleware per la verifica del JWT accessToken. Se è verificato aggiunge alla richiesta una proprietà userAuth valorizzato con user id
-// app.use(protectedRoute)
 
 // CRUD
 app.post('/product', insertProduct);
-app.get("/product", readAllProducts);
+app.get("/product", readProducts);
+
+// middleware per la verifica del JWT accessToken. Se è verificato aggiunge alla richiesta una proprietà userAuth valorizzato con user id
+app.use(protectedRoute);
+
+app.post("/order", insertOrder);
+app.put("/user", updateUser);
+app.get("/order", readOrder);
 
 // avvio server
 app.listen(process.env.PORT, () => {

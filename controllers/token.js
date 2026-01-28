@@ -13,7 +13,15 @@ const generateRefreshToken = ( userId ) => {
 }
 
 const sendAccessToken = (req, res, accessToken, user) => {
-    const { _id, name, surname, email, address } = user;
+    const {
+        _id, 
+        name, 
+        surname, 
+        email, 
+        address, 
+        role, 
+        order } = user;
+        
     console.log("Id trovato:", _id);
     res.send({ 
         _id,
@@ -22,6 +30,8 @@ const sendAccessToken = (req, res, accessToken, user) => {
         email,
         address,
         accessToken,
+        role,
+        order
      })
     }
     

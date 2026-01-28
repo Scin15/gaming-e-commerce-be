@@ -4,14 +4,14 @@ const Schema = mongoose.Schema;
 
 // definisco lo schema categorie che uso per l'array category nello schema per i prodotti
 const CategorySchema = new Schema({
-  tag: {type: String, required: [true, "Tag obbligatorio"]},
+  tag: {type: String, required: [true, "Tag obbligatorio"], minLength: 3, maxLength: 3},
   name: {type: String}
-})
+});
 
 const PlatformSchema = new Schema({
-  tag: {type: String, required: [true, "Tag obbligatorio"]},
+  tag: {type: String, required: [true, "Tag obbligatorio"], minLength: 3, maxLength: 3},
   name: {type: String}
-})
+});
 
 const ProductSchema = new Schema({
   

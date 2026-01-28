@@ -3,16 +3,18 @@ const { verify } = pkg
 
 // funzione per verificare che il token nell'header della richiesta sia valido
 const isAuth = ( req, res ) => {
-    const authorization = req.headers['authorization']
-    console.log(authorization)
+    const authorization = req.headers['authorization'];
+
     if ( !authorization ) {
-        throw ('You need to login')
+        return;
     }
-    const token = authorization.split(" ")[1]
-    console.log(typeof(token))
-    const { userId }  = verify( token, process.env.ACCESS_TOKEN_SECRET )
-    console.log(userId)
-    return userId
+
+    const token = authorization.split(" ")[1];
+    const { userId }  = verify( token, process.env.ACCESS_TOKEN_SECRET );
+    if (!userId) {
+        return;
+    }
+    return userId;
 }
 
 export { isAuth }
