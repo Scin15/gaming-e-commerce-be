@@ -2,7 +2,18 @@ import { Product } from '../schema/product.schema.js';
 import { User } from '../schema/user.schema.js';
 
 const insertProduct = async (req, res) => {
+
+  const userAuth = req.userAuth;
+
   try {
+
+    const user = await User.findById(userAuth);
+    if (!user) {
+      res.status(404).send({error: "Utente non trovato"});
+    }
+    if (user.role !== "admin") {
+      res.status(403).send({error: "Autorizzazione negata"});
+    }
 
     // costruzione del payload da inserire nel db
     let payload = req.body;
@@ -48,6 +59,9 @@ const insertOrder = async (req, res) => {
     const userId = req.body._id;
     const userAuth = req.userAuth;
 
+    console.log("user aut", userAuth);
+    console.log(userId);
+
     if (userId != userAuth) {
       res.status(403).send({error: "Autorizzazione negata"});
       return;
@@ -65,8 +79,9 @@ const insertOrder = async (req, res) => {
     try {
 
       const user = await User.findById(userId);
+      console.log("Ho trovato questo utente:", user);
 
-      if (!user.order) {
+      if (!user) {
         res.status(404).send({error: "Utente non trovato"});
         return;
       }
@@ -125,7 +140,7 @@ const updateUser = async (req, res) => {
   try {
     const user = await User.findById(userId);
     if (!user) {
-      res.status(404).send("Utente non trovato");
+      res.status(404).send({error: "Utente non trovato"});
       return;
     }
     

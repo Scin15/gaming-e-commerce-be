@@ -76,19 +76,17 @@ app.post('/login', loginUser);
 app.post('/logout', logoutUser);
 // attivazione account con url inviato per email dopo la registrazione
 app.get("/activate", activateAccount);
-// // percorso protetto da accesso
-// app.get('/protected', protectedRoute)
 // // refresh del token di accesso
 // app.post('/refresh_token', refreshToken)
 
 
 // CRUD
-app.post('/product', insertProduct);
 app.get("/product", readProducts);
 
 // middleware per la verifica del JWT accessToken. Se è verificato aggiunge alla richiesta una proprietà userAuth valorizzato con user id
 app.use(protectedRoute);
 
+app.post('/product', insertProduct);
 app.post("/order", insertOrder);
 app.put("/user", updateUser);
 app.get("/order", readOrder);

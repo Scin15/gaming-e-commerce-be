@@ -22,7 +22,6 @@ const sendAccessToken = (req, res, accessToken, user) => {
         role, 
         order } = user;
         
-    console.log("Id trovato:", _id);
     res.send({ 
         _id,
         name,

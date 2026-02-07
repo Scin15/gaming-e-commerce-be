@@ -13,16 +13,20 @@ import nodemailer from "nodemailer";
 const {verify} = jwt.default;
 
 const trasporter = nodemailer.createTransport({
-    host: "smtp.ethereal.email",
-    port: 587,
-    secure: false,
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
-        user: process.env.EMAIL_TEST,
-        pass: process.env.EMAIL_TEST_SECRET
+        type: "OAuth2",
+        user: process.env.EMAIL_USER,
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+        accessToken: process.env.GOOGLE_ACCESS_TOKEN,
     }
 });
 
-const sendActivationMail = async(email, token) => {
+const sendActivationMail = async (email, token) => {
     
     try {
         const info = await trasporter.sendMail({
@@ -34,7 +38,6 @@ const sendActivationMail = async(email, token) => {
         });
         
         console.log("Messaggio mandato:", info);
-        // res.status(200).send(info);
         
     } catch (err) {
         console.log(err);
@@ -49,7 +52,7 @@ const activateAccount = async (req, res) => {
     const activationToken = req.query.token;
     const email = req.query.email;
 
-    console.log("Email e token trovati: %s %s", email, activationToken);
+    // console.log("Email e token trovati: %s %s", email, activationToken);
 
     try {
         const user = await User.findOne({email: email});
@@ -100,7 +103,7 @@ const registerUser = async (req, res) => {
         // constrollo se l'utente è già presente nel DB
         const alreadyRegistered = await User.find({ email: email});
         // se già presenete nel DB mando una risposta di errore;
-        if ( alreadyRegistered.length > 0 ) {
+        if (alreadyRegistered.length > 0) {
             res.status(400).send({error: "Utente già registrato"});
             return;
         }
@@ -111,7 +114,7 @@ const registerUser = async (req, res) => {
         // genero token per attivazione account tramite mail
         const activationToken = generateAccessToken( email );
         
-        var insertUser = await User.create({
+        const insertUser = await User.create({
             email: email,
             name : name,
             surname : surname,
@@ -120,7 +123,7 @@ const registerUser = async (req, res) => {
             active: false,
             activation_token: activationToken,
             created_at : currentDate
-        })
+        });
         
         if (!insertUser) {
             res.status(500).send({error: "Errore nell'inserimento nuova utenza"});
@@ -128,6 +131,7 @@ const registerUser = async (req, res) => {
         }
         
         await sendActivationMail(email, activationToken);
+
         res.status(200).send(insertUser);
         
     } catch(error) {
@@ -139,7 +143,6 @@ const loginUser = async (req, res) => {
 
     try {
     // nel body viene passata mail e password
-    console.log("arrivata una richiesta login");
     const email = req.body.email;
     const password = req.body.password;
 
@@ -150,10 +153,7 @@ const loginUser = async (req, res) => {
 
     const user = await User.findOne({ email : email });
 
-    console.log("Utente trovato per il login", user);
-
-    
-    if (!user || user instanceof Array && user.length == 0) {
+    if (!user || user instanceof Array && user.length === 0) {
         res.status(400).send({error: "Utente non registrato"});
         return;
     }
@@ -163,8 +163,10 @@ const loginUser = async (req, res) => {
         return;
     }
 
+    let userVerificated = null;
+
     try{
-        var userVerificated = await compare( password, user.password )
+        userVerificated = await compare( password, user.password );
     } catch(err) {
         throw new Error(err);
     }
@@ -174,11 +176,11 @@ const loginUser = async (req, res) => {
         return;
     }
     // creazione ed invio jwtoken (JSON Web token)
-    const accessToken = generateAccessToken( email );
+    const accessToken = generateAccessToken( user._id );
     // inserimento refresh_token nel DB
 
     // invio del token di autenticazione e di refresh
-    sendAccessToken( req, res, accessToken, user )
+    sendAccessToken( req, res, accessToken, user );
 
     } catch(error) {
         res.status(500).send({
