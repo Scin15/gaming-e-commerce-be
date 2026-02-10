@@ -13,32 +13,31 @@ import nodemailer from "nodemailer";
 const {verify} = jwt.default;
 
 const trasporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
+    // host: 'smtp.gmail.com',
+    // port: 465,
+    service: "gmail",
     secure: true,
     auth: {
-        type: "OAuth2",
         user: process.env.EMAIL_USER,
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-        accessToken: process.env.GOOGLE_ACCESS_TOKEN,
+        pass: process.env.GOOGLE_MAIL_PASSWORD,
+        // type: "OAuth2",
+        // user: process.env.EMAIL_USER,
+        // clientId: process.env.GOOGLE_CLIENT_ID,
+        // clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        // refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+        // accessToken: process.env.GOOGLE_ACCESS_TOKEN,
     }
 });
 
 const sendActivationMail = async (email, token) => {
-    
     try {
         const info = await trasporter.sendMail({
-            from: "Marco",
+            from: "",
             to: email,
             subject: "Hello",
             text: "Usa il link sottostante per attivare il tuo account.",
             html: "<a href='http://localhost:3000/activate/?email="+ email + "&token=" + token + "'>Link di attivazione</a>"
         });
-        
-        console.log("Messaggio mandato:", info);
-        
     } catch (err) {
         console.log(err);
         res.status(500).send({error: err.message});
@@ -48,12 +47,8 @@ const sendActivationMail = async (email, token) => {
 export {sendActivationMail};
 
 const activateAccount = async (req, res) => {
-
     const activationToken = req.query.token;
     const email = req.query.email;
-
-    // console.log("Email e token trovati: %s %s", email, activationToken);
-
     try {
         const user = await User.findOne({email: email});
         if (!user || user instanceof Array && user.length === 0) {
@@ -68,14 +63,10 @@ const activateAccount = async (req, res) => {
             res.status(400).send("Attivazione non riuscita");
             return;
         }
-
         user.activation_token = "";
         user.active = true;
-
         await user.save();
-
         res.status(200).send({message: "Account attivato con successo"});
-
     } catch (err) {
         res.status(400).send({error: "Attivazione non riuscita"});
     }
@@ -113,7 +104,8 @@ const registerUser = async (req, res) => {
         const currentDate = Date.now();
         // genero token per attivazione account tramite mail
         const activationToken = generateAccessToken( email );
-        
+        // da spostare sopra e non registrare se c'è stato un errore nell'invio mail
+        await sendActivationMail(email, activationToken);
         const insertUser = await User.create({
             email: email,
             name : name,
@@ -129,8 +121,6 @@ const registerUser = async (req, res) => {
             res.status(500).send({error: "Errore nell'inserimento nuova utenza"});
             return;
         }
-        
-        await sendActivationMail(email, activationToken);
 
         res.status(200).send(insertUser);
         
