@@ -34,7 +34,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded());
 app.use(cors({
-  origin : ["http://localhost:5173", "https://gaming-e-commerce.onrender.com/"],
+  origin : ["http://localhost:5173", "https://gaming-e-commerce.onrender.com"],
   credentials : true
 }));
 
