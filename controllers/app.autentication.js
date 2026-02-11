@@ -141,7 +141,7 @@ const registerUser = async (req, res) => {
         const hashedPassword = await hash( password, 10);
         const currentDate = Date.now();
         // genero token per attivazione account tramite mail
-        // const activationToken = generateAccessToken( email );
+        const activationToken = generateAccessToken( email );
         // // da spostare sopra e non registrare se c'è stato un errore nell'invio mail
         // try { // catch inutile
         //     sendActivationMail(email, activationToken);
