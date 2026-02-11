@@ -13,33 +13,38 @@ import nodemailer from "nodemailer";
 const {verify} = jwt.default;
 
 const flagEthereal = Number(process.env.ETHEREAL);
+let trasporter = null;
+if (flagEthereal) {
+    console.log("setto testmail con ethereal");
+    trasporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false,
+        auth: {
+            user: process.env.EMAIL_TEST,
+            pass: process.env.EMAIL_TEST_SECRET,
+        }
+    })
 
-const trasporter = flagEthereal ? nodemailer.createTransport({
-    // host: 'smtp.gmail.com',
-    // port: 465,
-    service: "gmail",
-    secure: true,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.GOOGLE_MAIL_PASSWORD,
-        // type: "OAuth2",
-        // user: process.env.EMAIL_USER,
-        // clientId: process.env.GOOGLE_CLIENT_ID,
-        // clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        // refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-        // accessToken: process.env.GOOGLE_ACCESS_TOKEN,
-    }
-}) :
-nodemailer.createTransport({
-    host: "smtp.ethereal.email",
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_TEST,
-        pass: process.env.EMAIL_TEST_SECRET,
-    }
-})
-;
+} else {
+    console.log("setto testmail con gmail");
+    trasporter = nodemailer.createTransport({
+        // host: 'smtp.gmail.com',
+        // port: 465,
+        service: "gmail",
+        secure: true,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.GOOGLE_MAIL_PASSWORD,
+            // type: "OAuth2",
+            // user: process.env.EMAIL_USER,
+            // clientId: process.env.GOOGLE_CLIENT_ID,
+            // clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            // refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+            // accessToken: process.env.GOOGLE_ACCESS_TOKEN,
+        }
+    });
+}
 
 const sendActivationMail = async (email, token) => {
     try {
@@ -59,7 +64,6 @@ const sendActivationMail = async (email, token) => {
 }
 
 const testMail = async (req, res) => {
-    console.log("flag mail ethereal:", flagEthereal);
     const email = req.body.email;
     if (!email) {
         res.status(400).send({error: "inserisci una mail"});
