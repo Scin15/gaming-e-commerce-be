@@ -105,7 +105,12 @@ const registerUser = async (req, res) => {
         // genero token per attivazione account tramite mail
         const activationToken = generateAccessToken( email );
         // da spostare sopra e non registrare se c'è stato un errore nell'invio mail
-        await sendActivationMail(email, activationToken);
+        try {
+            await sendActivationMail(email, activationToken);
+        } catch (error) {
+            console.log("errore nell'invio mail", error.message);
+            throw new Error(`errore nell'invio mail, ${error.message}`);
+        }
         const insertUser = await User.create({
             email: email,
             name : name,
