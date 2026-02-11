@@ -31,6 +31,7 @@ const trasporter = nodemailer.createTransport({
 
 const sendActivationMail = async (email, token) => {
     try {
+        console.log(`${process.env.HOST_FULL}/activate/?email=`+ email + "&token=" + token);
         const info = await trasporter.sendMail({
             from: "e.commerce.app",
             to: email,
@@ -38,7 +39,6 @@ const sendActivationMail = async (email, token) => {
             text: "Usa il link sottostante per attivare il tuo account :)",
             html: `<a href='${process.env.HOST_FULL}/activate/?email=`+ email + "&token=" + token + "'>Link di attivazione</a>"
         });
-        console.log(`${process.env.HOST_FULL}/activate/?email=`+ email + "&token=" + token);
     } catch (err) {
         console.log(err);
         res.status(500).send({error: err.message});
@@ -106,7 +106,7 @@ const registerUser = async (req, res) => {
         // genero token per attivazione account tramite mail
         const activationToken = generateAccessToken( email );
         // da spostare sopra e non registrare se c'è stato un errore nell'invio mail
-        try {
+        try { // catch inutile
             sendActivationMail(email, activationToken);
         } catch (error) {
             console.log("errore nell'invio mail", error.message);
