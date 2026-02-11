@@ -12,7 +12,9 @@ import { User } from '../schema/user.schema.js';
 import nodemailer from "nodemailer";
 const {verify} = jwt.default;
 
-const trasporter = nodemailer.createTransport({
+const flagEthereal = Number(process.env.ETHEREAL);
+
+const trasporter = flagEthereal ? nodemailer.createTransport({
     // host: 'smtp.gmail.com',
     // port: 465,
     service: "gmail",
@@ -27,7 +29,17 @@ const trasporter = nodemailer.createTransport({
         // refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
         // accessToken: process.env.GOOGLE_ACCESS_TOKEN,
     }
-});
+}) :
+nodemailer.createTransport({
+    host: "smtp.ethereal.email",
+    port: 587,
+    secure: false,
+    auth: {
+        user: process.env.EMAIL_TEST,
+        pass: process.env.EMAIL_TEST_SECRET,
+    }
+})
+;
 
 const sendActivationMail = async (email, token) => {
     try {
@@ -40,13 +52,37 @@ const sendActivationMail = async (email, token) => {
             html: `<a href='${process.env.HOST_FULL}/activate/?email=`+ email + "&token=" + token + "'>Link di attivazione</a>"
         });
     } catch (err) {
-        console.log(`Errore nell'invio mail a ${email}, error: ${err.message} other info: ${err.code, err.command, err.response, err.responseCode}`);
+        console.log(`Errore nell'invio mail a ${email}, error: ${err.message} other info: ${err.code} ${err.command}, ${err.response}, ${err.responseCode}`);
 
         // res.status(500).send({error: err.message});
     }
 }
 
-export {sendActivationMail};
+const testMail = async (req, res) => {
+    console.log("flag mail ethereal:", flagEthereal);
+    const email = req.body.email;
+    if (!email) {
+        res.status(400).send({error: "inserisci una mail"});
+        return;
+    }
+    try {
+        console.log(`Invio mail di test a mail: ${email}`);
+        const info = await trasporter.sendMail({
+            from: "e.commerce.app",
+            to: email,
+            subject: "Mail di test",
+            text: "Mail di test",
+            html: ""
+        });
+        res.status(200).send({message: "email inviata correttamente a " + email + "con queste info: " + String(info)});
+    } catch (err) {
+        console.log(`Errore nell'invio mail a ${email}, error: ${err.message} other info: ${err.code} ${err.command}, ${err.response}, ${err.responseCode}`);
+
+        // res.status(500).send({error: err.message});
+    }
+}
+
+export {sendActivationMail, testMail};
 
 const activateAccount = async (req, res) => {
     const activationToken = req.query.token;
