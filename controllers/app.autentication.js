@@ -40,8 +40,9 @@ const sendActivationMail = async (email, token) => {
             html: `<a href='${process.env.HOST_FULL}/activate/?email=`+ email + "&token=" + token + "'>Link di attivazione</a>"
         });
     } catch (err) {
-        console.log(err);
-        res.status(500).send({error: err.message});
+        console.log(`Errore nell'invio mail a ${email}, error: ${err.message}`);
+
+        // res.status(500).send({error: err.message});
     }
 }
 
