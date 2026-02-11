@@ -12,39 +12,39 @@ import { User } from '../schema/user.schema.js';
 import nodemailer from "nodemailer";
 const {verify} = jwt.default;
 
-const flagEthereal = Number(process.env.ETHEREAL);
-let trasporter = null;
-if (flagEthereal) {
-    console.log("setto testmail con ethereal");
-    trasporter = nodemailer.createTransport({
-        host: "smtp.ethereal.email",
-        port: 587,
-        secure: false,
-        auth: {
-            user: process.env.EMAIL_TEST,
-            pass: process.env.EMAIL_TEST_SECRET,
-        }
-    })
+// const flagEthereal = Number(process.env.ETHEREAL);
+// let trasporter = null;
+// if (flagEthereal) {
+//     console.log("setto testmail con ethereal");
+//     trasporter = nodemailer.createTransport({
+//         host: "smtp.ethereal.email",
+//         port: 587,
+//         secure: false,
+//         auth: {
+//             user: process.env.EMAIL_TEST,
+//             pass: process.env.EMAIL_TEST_SECRET,
+//         }
+//     })
 
-} else {
-    console.log("setto testmail con gmail");
-    trasporter = nodemailer.createTransport({
-        // host: 'smtp.gmail.com',
-        // port: 465,
-        service: "gmail",
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.GOOGLE_MAIL_PASSWORD,
-            // type: "OAuth2",
-            // user: process.env.EMAIL_USER,
-            // clientId: process.env.GOOGLE_CLIENT_ID,
-            // clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            // refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-            // accessToken: process.env.GOOGLE_ACCESS_TOKEN,
-        }
-    });
-}
+// } else {
+//     console.log("setto testmail con gmail");
+//     trasporter = nodemailer.createTransport({
+//         // host: 'smtp.gmail.com',
+//         // port: 465,
+//         service: "gmail",
+//         secure: true,
+//         auth: {
+//             user: process.env.EMAIL_USER,
+//             pass: process.env.GOOGLE_MAIL_PASSWORD,
+//             // type: "OAuth2",
+//             // user: process.env.EMAIL_USER,
+//             // clientId: process.env.GOOGLE_CLIENT_ID,
+//             // clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//             // refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+//             // accessToken: process.env.GOOGLE_ACCESS_TOKEN,
+//         }
+//     });
+// }
 
 const sendActivationMail = async (email, token) => {
     try {
@@ -58,8 +58,6 @@ const sendActivationMail = async (email, token) => {
         });
     } catch (err) {
         console.log(`Errore nell'invio mail a ${email}, error: ${err.message} other info: ${err.code} ${err.command}, ${err.response}, ${err.responseCode}`);
-
-        // res.status(500).send({error: err.message});
     }
 }
 
@@ -81,8 +79,6 @@ const testMail = async (req, res) => {
         res.status(200).send({message: "email inviata correttamente a " + email + "con queste info: " + String(info)});
     } catch (err) {
         console.log(`Errore nell'invio mail a ${email}, error: ${err.message} other info: ${err.code} ${err.command}, ${err.response}, ${err.responseCode}`);
-
-        // res.status(500).send({error: err.message});
     }
 }
 
@@ -145,21 +141,21 @@ const registerUser = async (req, res) => {
         const hashedPassword = await hash( password, 10);
         const currentDate = Date.now();
         // genero token per attivazione account tramite mail
-        const activationToken = generateAccessToken( email );
-        // da spostare sopra e non registrare se c'è stato un errore nell'invio mail
-        try { // catch inutile
-            sendActivationMail(email, activationToken);
-        } catch (error) {
-            console.log("errore nell'invio mail", error.message);
-            // throw new Error(`errore nell'invio mail, ${error.message}`);
-        }
+        // const activationToken = generateAccessToken( email );
+        // // da spostare sopra e non registrare se c'è stato un errore nell'invio mail
+        // try { // catch inutile
+        //     sendActivationMail(email, activationToken);
+        // } catch (error) {
+        //     console.log("errore nell'invio mail", error.message);
+        //     // throw new Error(`errore nell'invio mail, ${error.message}`);
+        // }
         const insertUser = await User.create({
             email: email,
             name : name,
             surname : surname,
             password : hashedPassword,
             role : role,
-            active: false,
+            active: true,
             activation_token: activationToken,
             created_at : currentDate
         });
