@@ -241,7 +241,7 @@ const protectedRoute = async ( req, res, next ) => {
     next();
 
     } catch(error) {
-        res.status(404).send({error:`Errore nell'accesso alla risorsa: ${error}`});
+        res.status(403).send({error:`Errore nell'accesso alla risorsa: ${error}`});
     }
 }
 

@@ -127,13 +127,13 @@ const updateUser = async (req, res) => {
   const userAuth = req.userAuth;
 
   if (userId != userAuth) {
-    res.status(403).send("Autorizzazione negata");
+    res.status(403).send({error: "Autorizzazione negata"});
     return;
   }
   const payload = req.body.update;
 
   if (!userId || !payload) {
-    res.status(400).send("User id o oggetto update mancanti");
+    res.status(400).send({error: "User id o oggetto update mancanti"});
     return;
   }
 
@@ -150,7 +150,7 @@ const updateUser = async (req, res) => {
     
     const result = await user.save();
     if (!result) {
-      res.status(500).send("Non sono riuscito a fare l'update");
+      res.status(500).send({error: "Non sono riuscito a fare l'update"});
       return;
     }
 
