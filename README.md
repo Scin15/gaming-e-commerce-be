@@ -1,6 +1,11 @@
-# e-commerce-gaming
+# Progetto e-commerce gamestore
 
-Server express js per la gestione autenticazioni, autorizzazioni, catalogo e ordini.
+Backend di un e-commerce di titoli videoludici.
 
-Risorsa per impostare le OAuth per invio mail con Nodemailer
-https://stackoverflow.com/questions/51933601/what-is-the-definitive-way-to-use-gmail-with-oauth-and-nodemailer
+Tecnologie usate:
+
+1. Mongo DB per gestione utenze, catalogo, storico ordini;
+2. API per gestione registrazione e login con JWT;
+
+- Link all'applicazione live: https://gaming-e-commerce.onrender.com
+- Repository del front-end: https://github.com/Scin15/gaming-e-commerce-be
