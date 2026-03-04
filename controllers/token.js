@@ -5,7 +5,7 @@ const { sign } = pkg
 // create le funzioni per la generazione del token per l'accesso e il refresh
 
 const generateAccessToken = ( userId ) => {
-    return sign( { userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn : '10m' }  )
+    return sign( { userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn : '1m' }  )
 }
 
 const generateRefreshToken = ( userId ) => {
